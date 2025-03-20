@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # PPM (Personal Planning Management)
 
 ### The PPM app, short for Personal Planning Management, is an intelligent tool for personal planning and daily task management. This app allows effective scheduling and task prioritization, enabling you to precisely manage your daily routines and make the most of your time. With PPM, everything is at your fingertips to assist you in planning your day-to-day life at its best.
@@ -79,3 +80,6 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+=======
+# app-ppm
+>>>>>>> 85766ff100b56411fb12c030edcdcab98269407e
