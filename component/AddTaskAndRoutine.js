@@ -48,10 +48,41 @@ const AddTaskAndRoutine = ({
     handleSubmit,
     formState: { errors },
     reset,
+    setError,
   } = useForm({ defaultValues: editData && editData.data });
+
+  // Ngày hiện tại làm ngày tối thiểu
+  const currentDate = moment();
 
   const onSubmit = async (data) => {
     try {
+      // Kiểm tra ngày trước khi xử lý
+      if (addType === "plans") {
+        const selectedDate = moment(
+          data.date,
+          lang === "fa" ? "jYYYY-jMM-jDD" : "YYYY-MM-DD"
+        );
+        if (selectedDate.isBefore(currentDate, "day")) {
+          setError("date", {
+            type: "manual",
+            message: i18n.t("cannot_select_past_date"),
+          });
+          return;
+        }
+      } else if (addType === "routines") {
+        const startRoutine = moment(
+          data.start_routine,
+          lang === "fa" ? "jYYYY-jMM-jDD" : "YYYY-MM-DD"
+        );
+        if (startRoutine.isBefore(currentDate, "day")) {
+          setError("start_routine", {
+            type: "manual",
+            message: i18n.t("cannot_select_past_date"),
+          });
+          return;
+        }
+      }
+
       let createData;
       let existingArray = [];
 
@@ -62,12 +93,12 @@ const AddTaskAndRoutine = ({
 
       const createId = existingArray ? Number(existingArray.length) + 1 : 1;
 
-      if (addType == "plans") {
+      if (addType === "plans") {
         createData = {
           id: data?.id || `${createId}_plans`,
           title: data.title,
           date:
-            lang == "fa"
+            lang === "fa"
               ? moment(data.date, "jYYYY-jMM-jDD").format("YYYY-MM-DD")
               : data.date,
           description: data.description,
@@ -78,15 +109,15 @@ const AddTaskAndRoutine = ({
         if (!editData) {
           dispatch(addPlan(createData));
         }
-      } else if (addType == "routines") {
+      } else if (addType === "routines") {
         let daysToAdd = [];
         const startDate = new Date(
-          lang == "fa"
+          lang === "fa"
             ? moment(data.start_routine, "jYYYY-jMM-jDD").format("YYYY-MM-DD")
             : data.start_routine
         );
         const endDate = new Date(
-          lang == "fa"
+          lang === "fa"
             ? moment(data.end_routine, "jYYYY-jMM-jDD").format("YYYY-MM-DD")
             : data.end_routine
         );
@@ -100,15 +131,15 @@ const AddTaskAndRoutine = ({
           startDate.setDate(startDate.getDate() + 1);
         }
 
-        createData = daysToAdd.map((day, index) => ({
+        createData = daysToAdd.map((day) => ({
           id: data?.id || `${createId}_routines`,
           title: data.title,
           start_routine:
-            lang == "fa"
+            lang === "fa"
               ? moment(data.start_routine, "jYYYY-jMM-jDD").format("YYYY-MM-DD")
               : data.start_routine,
           end_routine:
-            lang == "fa"
+            lang === "fa"
               ? moment(data.end_routine, "jYYYY-jMM-jDD").format("YYYY-MM-DD")
               : data.end_routine,
           date: day.toISOString().split("T")[0],
@@ -123,18 +154,17 @@ const AddTaskAndRoutine = ({
         }
       }
 
-      if (editData && addType == "plans") {
+      if (editData && addType === "plans") {
         const editArray = _.map(existingArray, (item) =>
-          item.id == data.id ? createData : item
+          item.id === data.id ? createData : item
         );
         existingArray = editArray;
         dispatch(editPlanAndRoutine({ type: addType, data: existingArray }));
-      } else if (editData && addType == "routines") {
+      } else if (editData && addType === "routines") {
         const filterOldThisRoutine = _.filter(
           existingArray,
-          (item) => item.id != data.id
+          (item) => item.id !== data.id
         );
-
         existingArray = _.concat(filterOldThisRoutine || [], createData);
         dispatch(editPlanAndRoutine({ type: addType, data: existingArray }));
       } else {
@@ -191,7 +221,7 @@ const AddTaskAndRoutine = ({
                   onValueChange={(newValue) => setAddType(newValue)}
                   value={addType}
                 >
-                  {(!editData || editData.type == "plans") && (
+                  {(!editData || editData.type === "plans") && (
                     <View
                       style={{
                         display: "flex",
@@ -203,14 +233,14 @@ const AddTaskAndRoutine = ({
                       <RadioButton value="plans" />
                       <Text
                         style={{
-                          fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                          fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                         }}
                       >
                         {i18n.t("task")}
                       </Text>
                     </View>
                   )}
-                  {(!editData || editData.type == "routines") && (
+                  {(!editData || editData.type === "routines") && (
                     <View
                       style={{
                         display: "flex",
@@ -222,7 +252,7 @@ const AddTaskAndRoutine = ({
                       <RadioButton value="routines" />
                       <Text
                         style={{
-                          fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                          fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                         }}
                       >
                         {i18n.t("routine")}
@@ -242,7 +272,7 @@ const AddTaskAndRoutine = ({
                         value={value}
                         label={i18n.t("title")}
                         style={{
-                          fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                          fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                           marginTop: 10,
                         }}
                       />
@@ -254,7 +284,7 @@ const AddTaskAndRoutine = ({
                   {errors.title && (
                     <HelperText
                       style={{
-                        fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                        fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                       }}
                       type="error"
                     >
@@ -272,7 +302,7 @@ const AddTaskAndRoutine = ({
                         value={value}
                         label={i18n.t("description")}
                         style={{
-                          fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                          fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                           marginTop: 10,
                         }}
                       />
@@ -281,7 +311,7 @@ const AddTaskAndRoutine = ({
                     defaultValue=""
                   />
 
-                  {addType == "plans" ? (
+                  {addType === "plans" ? (
                     <View style={{ marginTop: 20 }}>
                       <Controller
                         control={control}
@@ -289,7 +319,7 @@ const AddTaskAndRoutine = ({
                           <Calendar
                             themeMode={themeMode}
                             onPress={({ en, fa }) => {
-                              if (lang == "fa") {
+                              if (lang === "fa") {
                                 onChange(fa);
                               } else {
                                 onChange(en);
@@ -299,20 +329,20 @@ const AddTaskAndRoutine = ({
                             title={i18n.t("date")}
                             lang={lang}
                             theme={themeCalendar}
+                            minDate={currentDate.toDate()} // Giới hạn ngày tối thiểu
                           />
                         )}
                         name="date"
-                        rules={
-                          addType == "plans" && {
-                            required: i18n.t("is_required"),
-                          }
-                        }
+                        rules={{
+                          required: i18n.t("is_required"),
+                        }}
                         defaultValue=""
                       />
                       {errors.date && (
                         <HelperText
                           style={{
-                            fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                            fontFamily:
+                              lang === "fa" ? "IRANSans" : "SpaceMono",
                           }}
                           type="error"
                         >
@@ -329,7 +359,7 @@ const AddTaskAndRoutine = ({
                             <Calendar
                               themeMode={themeMode}
                               onPress={({ en, fa }) => {
-                                if (lang == "fa") {
+                                if (lang === "fa") {
                                   onChange(fa);
                                 } else {
                                   onChange(en);
@@ -339,18 +369,18 @@ const AddTaskAndRoutine = ({
                               title={i18n.t("start_routine")}
                               theme={themeCalendar}
                               lang={lang}
+                              minDate={currentDate.toDate()} // Giới hạn ngày tối thiểu
                             />
                           )}
                           name="start_routine"
                           rules={{ required: i18n.t("is_required") }}
                           defaultValue=""
                         />
-
                         {errors.start_routine && (
                           <HelperText
                             style={{
                               fontFamily:
-                                lang == "fa" ? "IRANSans" : "SpaceMono",
+                                lang === "fa" ? "IRANSans" : "SpaceMono",
                             }}
                             type="error"
                           >
@@ -361,11 +391,11 @@ const AddTaskAndRoutine = ({
                       <View style={{ marginTop: 20 }}>
                         <Controller
                           control={control}
-                          render={({ field: { onChange, onBlur, value } }) => (
+                          render={({ field: { onChange, value } }) => (
                             <Calendar
                               themeMode={themeMode}
                               onPress={({ en, fa }) => {
-                                if (lang == "fa") {
+                                if (lang === "fa") {
                                   onChange(fa);
                                 } else {
                                   onChange(en);
@@ -375,18 +405,18 @@ const AddTaskAndRoutine = ({
                               title={i18n.t("end_routine")}
                               lang={lang}
                               theme={themeCalendar}
+                              minDate={currentDate.toDate()} // Giới hạn ngày tối thiểu (tuỳ chọn)
                             />
                           )}
                           name="end_routine"
                           rules={{ required: i18n.t("is_required") }}
                           defaultValue=""
                         />
-
                         {errors.end_routine && (
                           <HelperText
                             style={{
                               fontFamily:
-                                lang == "fa" ? "IRANSans" : "SpaceMono",
+                                lang === "fa" ? "IRANSans" : "SpaceMono",
                             }}
                             type="error"
                           >
@@ -405,7 +435,7 @@ const AddTaskAndRoutine = ({
                       >
                         <Controller
                           control={control}
-                          render={({ field: { onChange, onBlur, value } }) => {
+                          render={({ field: { onChange, value } }) => {
                             return (
                               <>
                                 <View
@@ -431,7 +461,9 @@ const AddTaskAndRoutine = ({
                                   <Text
                                     style={{
                                       fontFamily:
-                                        lang == "fa" ? "IRANSans" : "SpaceMono",
+                                        lang === "fa"
+                                          ? "IRANSans"
+                                          : "SpaceMono",
                                     }}
                                   >
                                     {i18n.t("everyday")}
@@ -455,7 +487,6 @@ const AddTaskAndRoutine = ({
                                           }
                                           onPress={() => {
                                             let copy = [...value];
-
                                             if (_.includes(value, item)) {
                                               _.remove(copy, (i) => i === item);
                                               onChange(copy);
@@ -468,7 +499,7 @@ const AddTaskAndRoutine = ({
                                         <Text
                                           style={{
                                             fontFamily:
-                                              lang == "fa"
+                                              lang === "fa"
                                                 ? "IRANSans"
                                                 : "SpaceMono",
                                           }}
@@ -495,7 +526,7 @@ const AddTaskAndRoutine = ({
                   {errors.repeating && (
                     <HelperText
                       style={{
-                        fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                        fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                       }}
                       type="error"
                     >
@@ -522,7 +553,7 @@ const AddTaskAndRoutine = ({
                   >
                     <Text
                       style={{
-                        fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                        fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                       }}
                     >
                       {i18n.t("close")}
@@ -534,7 +565,7 @@ const AddTaskAndRoutine = ({
                   >
                     <Text
                       style={{
-                        fontFamily: lang == "fa" ? "IRANSans" : "SpaceMono",
+                        fontFamily: lang === "fa" ? "IRANSans" : "SpaceMono",
                       }}
                     >
                       {i18n.t("submit")}
